@@ -38,6 +38,9 @@ public class ChatStageController {
 	private ByteBuffer fileBuffer;
 	private String fileName;
 	private boolean fileJustGot = false;
+	private String user;
+	private WebSocketClient webSocketClient;
+
 	@FXML
 	TextField userTextField;
 	@FXML
@@ -55,46 +58,10 @@ public class ChatStageController {
 	@FXML
 	Label fileSaveExit;
 
-	private String user;
-	private WebSocketClient webSocketClient;
-
 	@FXML
 	public void initialize() {
 		webSocketClient = new WebSocketClient();
 		user = userTextField.getText();
-	}
-
-	private double calculateWidth(String name) {
-		Text text = new Text("File received: " + name);
-		text.applyCss();
-		return text.getLayoutBounds().getWidth();
-	}
-
-	private byte[] getBytesFromFile(File file) throws IOException {
-		long length = file.length();
-
-		if (length > MAX_FILE_SIZE) {
-			throw new IOException("File is too large!");
-		}
-
-		byte[] bytes = new byte[(int) length];
-
-		int offset = 0;
-		int numRead = 0;
-
-		InputStream is = new FileInputStream(file);
-		try {
-			while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
-				offset += numRead;
-			}
-		} finally {
-			is.close();
-		}
-
-		if (offset < bytes.length) {
-			throw new IOException("Could not completely read file " + file.getName());
-		}
-		return bytes;
 	}
 
 	@FXML
@@ -180,6 +147,39 @@ public class ChatStageController {
 		}
 	}
 
+	private double calculateWidth(String name) {
+		Text text = new Text("File received: " + name);
+		text.applyCss();
+		return text.getLayoutBounds().getWidth();
+	}
+
+	private byte[] getBytesFromFile(File file) throws IOException {
+		long length = file.length();
+
+		if (length > MAX_FILE_SIZE) {
+			throw new IOException("File is too large!");
+		}
+
+		byte[] bytes = new byte[(int) length];
+
+		int offset = 0;
+		int numRead = 0;
+
+		InputStream is = new FileInputStream(file);
+		try {
+			while (offset < bytes.length && (numRead = is.read(bytes, offset, bytes.length - offset)) >= 0) {
+				offset += numRead;
+			}
+		} finally {
+			is.close();
+		}
+
+		if (offset < bytes.length) {
+			throw new IOException("Could not completely read file " + file.getName());
+		}
+		return bytes;
+	}
+
 	public void closeSession(CloseReason closeReason) {
 		try {
 			webSocketClient.session.close(closeReason);
@@ -194,6 +194,16 @@ public class ChatStageController {
 
 		public WebSocketClient() {
 			connectToWebSocket();
+		}
+
+		private void connectToWebSocket() {
+			WebSocketContainer webSocketContainer = ContainerProvider.getWebSocketContainer();
+			try {
+				URI uri = URI.create("ws://localhost:8080/Proj2/websocketendpoint");
+				webSocketContainer.connectToServer(this, uri);
+			} catch (DeploymentException | IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		@OnOpen
@@ -238,16 +248,6 @@ public class ChatStageController {
 			fileLabel.setVisible(true);
 			fileBuffer = bufer;
 			fileJustGot = true;
-		}
-
-		private void connectToWebSocket() {
-			WebSocketContainer webSocketContainer = ContainerProvider.getWebSocketContainer();
-			try {
-				URI uri = URI.create("ws://localhost:8080/Proj2/websocketendpoint");
-				webSocketContainer.connectToServer(this, uri);
-			} catch (DeploymentException | IOException e) {
-				e.printStackTrace();
-			}
 		}
 
 		public void sendMessage(String message) {

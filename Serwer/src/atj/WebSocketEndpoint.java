@@ -52,7 +52,7 @@ public class WebSocketEndpoint {
 	}
 
 	@OnMessage
-	public void onMessage(ByteBuffer byteBuffer, Session session){
+	public void onMessage(ByteBuffer byteBuffer, Session session) {
 		for (Session oneSession : session.getOpenSessions()) {
 			try {
 				oneSession.getBasicRemote().sendBinary(byteBuffer);

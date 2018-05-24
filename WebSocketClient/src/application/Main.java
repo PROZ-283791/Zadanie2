@@ -28,7 +28,6 @@ public class Main extends Application {
 			primaryStage.setOnHiding(e -> primaryStage_Hiding(e, fxmlLoader));
 			primaryStage.show();
 			primaryStage.setOnCloseRequest(x -> primaryStage.close());
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
